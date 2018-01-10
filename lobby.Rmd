@@ -1,0 +1,27 @@
+---
+title: "lobby"
+output: html_notebook
+---
+
+```{r, setup}
+library("tidyverse")
+library("readxl")
+```
+
+```{r, reading_lobby_data}
+file <- "../lobby/BB.DD. LOBBY 2_ (1).xlsx"
+sheets <- readxl::excel_sheets(file)
+labby_data <- lapply(sheets, function(X) {
+  result <- readxl::read_excel(file, sheet = X)
+  result$month <- X
+  result
+})
+combine_sheets <- do.call("rbind", labby_data)
+```
+
+```{r, reading_words_data}
+file <- "../lobby/keywords - etiquetas - Sheet1.csv"
+words_data <- read_csv(file)
+```
+
+
