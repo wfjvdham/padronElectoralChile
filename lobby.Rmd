@@ -6,17 +6,21 @@ output: html_notebook
 ```{r, setup}
 library("tidyverse")
 library("readxl")
+library("hgchmagic")
 ```
 
 ```{r, reading_lobby_data}
 file <- "../lobby/BB.DD. LOBBY 2_ (1).xlsx"
-sheets <- readxl::excel_sheets(file)
-labby_data <- lapply(sheets, function(X) {
-  result <- readxl::read_excel(file, sheet = X)
+sheets <- excel_sheets(file) 
+sheets_data <- lapply(sheets, function(X) {
+  result <- read_excel(file, sheet = X)
   result$month <- X
   result
 })
-combine_sheets <- do.call("rbind", labby_data)
+lobby_data <- do.call("rbind", sheets_data)
+lobby_data$month <- lobby_data$month  %>%
+  str_sub(start = 1L, end = -6L) %>%
+  factor(ordered = TRUE, levels = c(str_sub(sheets, start = 1L, end = -6L))) 
 ```
 
 ```{r, reading_words_data}
@@ -24,4 +28,43 @@ file <- "../lobby/keywords - etiquetas - Sheet1.csv"
 words_data <- read_csv(file)
 ```
 
+```{r, find_words}
+tag_words <- function(word, tema_word) {
+  lobby_data %>%
+    mutate(
+      sensitive = ifelse(
+        grepl(word, `Materia de Audiencia`, ignore.case = TRUE),
+        TRUE,
+        sensitive
+      ),
+      tag = ifelse(
+        grepl(word, `Materia de Audiencia`, ignore.case = TRUE), 
+        word, 
+        tag
+      ),
+      tema = ifelse(
+        grepl(word, `Materia de Audiencia`, ignore.case = TRUE), 
+        tema_word, 
+        tema
+      )
+    )
+} 
+lobby_data$sensitive <- FALSE
+lobby_data$tag <- NA
+lobby_data$tema <- NA
+for (i in 1:nrow(words_data)) {
+  lobby_data <- tag_words(words_data$`palabra clave`[i], words_data$tema[i])
+}
+```
+
+```{r counts}
+hgch_bar_ver_top_Cat(lobby_data$sensitive, title = "Numero de Reuniones sensitivo")
+hgch_bar_ver_top_Cat(lobby_data$tema, title = "Numero de Reuniones sensitivo por tema")
+hgch_bar_ver_top_Cat(lobby_data$tag, title = "Numero de Reuniones sensitivo por palabra", topn = 10)
+lobby_data_sensitivo <- lobby_data %>%
+  filter(sensitive == TRUE)
+hgch_bar_ver_Cat(lobby_data_sensitivo$month, title = "Numero de Reuniones sensitivo por mes")
+ggplot(lobby_data_sensitivo) +
+  geom_bar(aes(month))
+```
 
