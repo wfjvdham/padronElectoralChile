@@ -1,9 +1,11 @@
 ---
-title: "lobby"
-output: html_notebook
+title: "Lobby"
+output:
+  html_document:
+    df_print: paged
 ---
 
-```{r, setup}
+```{r, setup, include=FALSE}
 library("tidyverse")
 library("readxl")
 library("hgchmagic")
@@ -79,6 +81,7 @@ lobby_data_sensitivo <- lobby_data %>%
 #lobby_data$`Sujetos Activos`[1] <- "abad retamal ana francisca"
 merged_data <- merge(lobby_data, total_padron_df, 
                      by.x = "Sujetos Activos", by.y = "NOMBRE")
+nrow(merged_data)
 ```
 
 ```{r counts}
