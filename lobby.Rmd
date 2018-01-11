@@ -31,7 +31,7 @@ words_data <- read_csv(file)
 ```
 
 ```{r reading_padron_data}
-pathToParsedData <- "../parsed_data/"
+pathToParsedData <- "./parsed_data/"
 filesFinished <- list.files(path = pathToParsedData) %>%
   str_sub(start = 1L, end = -5L)
 

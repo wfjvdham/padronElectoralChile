@@ -4,9 +4,10 @@ library("lubridate")
 
 # command to move pdfs to one folder
 # sudo mv */* /
+options(java.parameters = "-Xmx7000m")
 
 pathToPdfs <- "../pdfs/"
-pathToParsedData <- "../parsed_data/"
+pathToParsedData <- "./parsed_data/"
 
 files <- list.files(path = pathToPdfs) %>%
   str_sub(start = 1L, end = -5L) %>%
