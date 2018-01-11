@@ -2,6 +2,9 @@ library("tabulizer")
 library("tidyverse")
 library("lubridate")
 
+# command to move pdfs to one folder
+# sudo mv */* /
+
 pathToPdfs <- "../pdfs/"
 pathToParsedData <- "../parsed_data/"
 
@@ -22,6 +25,7 @@ totalList <- 1:nrow(filesToDo) %>%
     print(paste("file number", i_file, "/", nrow(filesToDo)))
     
     file <- filesToDo[i_file, ]  
+    print(paste("file name:", file))
     parsedFile <- extract_tables(paste0(pathToPdfs, file, ".pdf"))
 
     pages <- 1:length(parsedFile) %>%
@@ -34,9 +38,4 @@ totalList <- 1:nrow(filesToDo) %>%
     
     total <- do.call("rbind", pages)
     saveRDS(total, file = paste0(pathToParsedData, file, ".Rda"))
-    print(now())
   })
-
-#test <- readRDS("../parsed_data/ChileChico.Rda")
-#totalDf <- do.call("rbind", totalList)
-
