@@ -7,6 +7,7 @@ output: html_notebook
 library("tidyverse")
 library("readxl")
 library("hgchmagic")
+library("purrr")
 ```
 
 ```{r, reading_lobby_data}
@@ -21,11 +22,26 @@ lobby_data <- do.call("rbind", sheets_data)
 lobby_data$month <- lobby_data$month  %>%
   str_sub(start = 1L, end = -6L) %>%
   factor(ordered = TRUE, levels = c(str_sub(sheets, start = 1L, end = -6L))) 
+lobby_data$`Sujetos Activos` <- tolower(lobby_data$`Sujetos Activos`)
 ```
 
 ```{r, reading_words_data}
 file <- "../lobby/keywords - etiquetas - Sheet1.csv"
 words_data <- read_csv(file)
+```
+
+```{r reading_padron_data}
+pathToParsedData <- "../parsed_data/"
+filesFinished <- list.files(path = pathToParsedData) %>%
+  str_sub(start = 1L, end = -5L)
+
+total_list <- 1:length(filesFinished) %>%
+  map(function(i) {
+    readRDS(paste0(pathToParsedData, filesFinished[i], ".Rda"))
+  })
+total_padron_df <- do.call("rbind", total_list) %>%
+  as_data_frame()
+total_padron_df$NOMBRE <- tolower(total_padron_df$NOMBRE)
 ```
 
 ```{r, find_words}
@@ -55,14 +71,20 @@ lobby_data$tema <- NA
 for (i in 1:nrow(words_data)) {
   lobby_data <- tag_words(words_data$`palabra clave`[i], words_data$tema[i])
 }
+lobby_data_sensitivo <- lobby_data %>%
+  filter(sensitive == TRUE)
+```
+
+```{r merge_data}
+#lobby_data$`Sujetos Activos`[1] <- "abad retamal ana francisca"
+merged_data <- merge(lobby_data, total_padron_df, 
+                     by.x = "Sujetos Activos", by.y = "NOMBRE")
 ```
 
 ```{r counts}
 hgch_bar_ver_top_Cat(lobby_data$sensitive, title = "Numero de Reuniones sensitivo")
 hgch_bar_ver_top_Cat(lobby_data$tema, title = "Numero de Reuniones sensitivo por tema")
 hgch_bar_ver_top_Cat(lobby_data$tag, title = "Numero de Reuniones sensitivo por palabra", topn = 10)
-lobby_data_sensitivo <- lobby_data %>%
-  filter(sensitive == TRUE)
 hgch_bar_ver_Cat(lobby_data_sensitivo$month, title = "Numero de Reuniones sensitivo por mes")
 ggplot(lobby_data_sensitivo) +
   geom_bar(aes(month))
