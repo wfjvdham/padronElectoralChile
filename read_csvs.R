@@ -40,3 +40,15 @@ filesToDo <- anti_join(files, filesFinished)
     parsedFile <- as.list(parsedFile)
     saveRDS(parsedFile, file = paste0(pathToParsedData, file, ".Rda"))
   })
+
+filesFinished <- list.files(path = pathToParsedData) %>%
+  str_sub(start = 1L, end = -5L)
+
+total_list <- 1:length(filesFinished) %>%
+  map(function(i) {
+    readRDS(paste0(pathToParsedData, filesFinished[i], ".Rda"))
+  })
+total_padron_df <- do.call("rbind", total_list) %>%
+  as_data_frame()
+total_padron_df$NOMBRE <- tolower(total_padron_df$NOMBRE) 
+saveRDS(total_padron_df, file = "total_padron.Rda")
