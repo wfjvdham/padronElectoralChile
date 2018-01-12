@@ -18,11 +18,14 @@ sheets_data <- lapply(sheets, function(X) {
   result$month <- X
   result
 })
-lobby_data <- do.call("rbind", sheets_data)
+lobby_data <- do.call("rbind", sheets_data) %>%
+  mutate(`Sujetos Activos` = tolower(`Sujetos Activos`),
+         `Sujetos Activos` = str_split(`Sujetos Activos`, ",")) %>%
+  unnest()
+rm(sheets_data)
 lobby_data$month <- lobby_data$month  %>%
   str_sub(start = 1L, end = -6L) %>%
   factor(ordered = TRUE, levels = c(str_sub(sheets, start = 1L, end = -6L))) 
-lobby_data$`Sujetos Activos` <- tolower(lobby_data$`Sujetos Activos`)
 ```
 
 ```{r, reading_words_data}
@@ -31,17 +34,8 @@ words_data <- read_csv(file)
 ```
 
 ```{r reading_padron_data}
-pathToParsedData <- "./parsed_data/"
-filesFinished <- list.files(path = pathToParsedData) %>%
-  str_sub(start = 1L, end = -5L)
-
-total_list <- 1:length(filesFinished) %>%
-  map(function(i) {
-    readRDS(paste0(pathToParsedData, filesFinished[i], ".Rda"))
-  })
-total_padron_df <- do.call("rbind", total_list) %>%
-  as_data_frame()
-total_padron_df$NOMBRE <- tolower(total_padron_df$NOMBRE)
+total_padron_df <- readRDS("total_padron.Rda") %>%
+  select(NOMBRE)
 ```
 
 ```{r, find_words}
@@ -76,10 +70,14 @@ lobby_data_sensitivo <- lobby_data %>%
 ```
 
 ```{r merge_data}
-#lobby_data$`Sujetos Activos`[1] <- "abad retamal ana francisca"
 merged_data <- merge(lobby_data, total_padron_df, 
                      by.x = "Sujetos Activos", by.y = "NOMBRE")
 nrow(merged_data)
+```
+
+```{r calculate_distance}
+total_padron_df <- total_padron_df %>%
+  mutate(dist = adist(NOMBRE, lobby_data$`Sujetos Activos`[2]))
 ```
 
 ```{r counts}
