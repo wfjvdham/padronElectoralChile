@@ -21,7 +21,9 @@ sheets_data <- lapply(sheets, function(X) {
 lobby_data <- do.call("rbind", sheets_data) %>%
   mutate(`Sujetos Activos` = tolower(`Sujetos Activos`),
          `Sujetos Activos` = str_split(`Sujetos Activos`, ",")) %>%
-  unnest()
+  unnest() %>%
+  mutate(`Sujetos Activos` = str_trim(`Sujetos Activos`))
+  
 rm(sheets_data)
 lobby_data$month <- lobby_data$month  %>%
   str_sub(start = 1L, end = -6L) %>%
@@ -35,7 +37,8 @@ words_data <- read_csv(file)
 
 ```{r reading_padron_data}
 total_padron_df <- readRDS("total_padron.Rda") %>%
-  select(NOMBRE)
+  select(NOMBRE) %>%
+  mutate(NOMBRE = str_trim(NOMBRE))
 ```
 
 ```{r, find_words}
@@ -76,8 +79,8 @@ nrow(merged_data)
 ```
 
 ```{r calculate_distance}
-total_padron_df <- total_padron_df %>%
-  mutate(dist = adist(NOMBRE, lobby_data$`Sujetos Activos`[2]))
+#total_padron_df <- total_padron_df %>%
+#  mutate(dist = adist(NOMBRE, lobby_data$`Sujetos Activos`[2]))
 ```
 
 ```{r counts}
@@ -88,4 +91,3 @@ hgch_bar_ver_Cat(lobby_data_sensitivo$month, title = "Numero de Reuniones sensit
 ggplot(lobby_data_sensitivo) +
   geom_bar(aes(month))
 ```
-
