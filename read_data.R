@@ -19,9 +19,8 @@ filesFinished <- list.files(path = pathToParsedData) %>%
 
 filesToDo <- anti_join(files, filesFinished)
 
-totalList <- 1:nrow(filesToDo) %>%
+1:nrow(filesToDo) %>%
   purrr::map(function(i_file) {
-    startTime <- now()
     print(now())
     print(paste("file number", i_file, "/", nrow(filesToDo)))
     
