@@ -46,9 +46,13 @@ filesFinished <- list.files(path = pathToParsedData) %>%
 
 total_list <- 1:length(filesFinished) %>%
   map(function(i) {
-    readRDS(paste0(pathToParsedData, filesFinished[i], ".Rda"))
+    temp <- readRDS(paste0(pathToParsedData, filesFinished[i], ".Rda"))  %>% 
+      as_data_frame()
+    colnames(temp) <- c("NOMBRE", "C.IDENTIDAD", "SEXO", "DOMICILIO ELECTORAL", 
+                        "CIRCUNSCRIPCIÓN", "MESA")  
+    temp
   })
-total_padron_df <- do.call("rbind", total_list) %>%
-  as_data_frame()
+
+total_padron_df <- do.call("rbind", total_list) 
 total_padron_df$NOMBRE <- tolower(total_padron_df$NOMBRE) 
 saveRDS(total_padron_df, file = "total_padron.Rda")
