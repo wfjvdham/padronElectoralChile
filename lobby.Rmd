@@ -18,12 +18,14 @@ sheets_data <- lapply(sheets, function(X) {
   result$month <- X
   result
 })
-lobby_data <- do.call("rbind", sheets_data) %>%
+lobby_data <- do.call("rbind", sheets_data) 
+n_reuniones <- nrow(lobby_data)
+lobby_data <- lobby_data%>%
   mutate(`Sujetos Activos` = tolower(`Sujetos Activos`),
          `Sujetos Activos` = str_split(`Sujetos Activos`, ",")) %>%
   unnest() %>%
   mutate(`Sujetos Activos` = str_trim(`Sujetos Activos`))
-  
+n_personas <- length(unique(lobby_data$`Sujetos Activos`))  
 rm(sheets_data)
 lobby_data$month <- lobby_data$month  %>%
   str_sub(start = 1L, end = -6L) %>%
@@ -35,10 +37,18 @@ file <- "../lobby/keywords - etiquetas - Sheet1.csv"
 words_data <- read_csv(file)
 ```
 
-```{r reading_padron_data}
-total_padron_df <- readRDS("total_padron.Rda") %>%
-  select(NOMBRE) %>%
-  mutate(NOMBRE = str_trim(NOMBRE))
+```{r reading_padron_data, cache=TRUE}
+total_padron_df <- readRDS("total_padron.Rda")
+```
+
+```{r merge_data}
+merged_data <- merge(lobby_data, total_padron_df, 
+                     by.x = "Sujetos Activos", by.y = "NOMBRE")
+```
+
+```{r calculate_distance}
+#total_padron_df <- total_padron_df %>%
+#  mutate(dist = adist(NOMBRE, lobby_data$`Sujetos Activos`[2]))
 ```
 
 ```{r, find_words}
@@ -72,16 +82,18 @@ lobby_data_sensitivo <- lobby_data %>%
   filter(sensitive == TRUE)
 ```
 
-```{r merge_data}
-merged_data <- merge(lobby_data, total_padron_df, 
-                     by.x = "Sujetos Activos", by.y = "NOMBRE")
-nrow(merged_data)
-```
+# Informacion general
 
-```{r calculate_distance}
-#total_padron_df <- total_padron_df %>%
-#  mutate(dist = adist(NOMBRE, lobby_data$`Sujetos Activos`[2]))
-```
+**Padron**
+
+- Numero de personas analizado correctamente: `r nrow(total_padron_df)`
+
+**Lobby**
+
+- Numero de reuniones: `r n_reuniones`
+- Numero de personas en estas reuniones: `r n_personas`
+- Numero de personas en reuniones sensitivo: `r nrow(lobby_data_sensitivo)`
+- Numero de peronas enconro en el padron: `r nrow(merged_data)`
 
 ```{r counts}
 hgch_bar_ver_top_Cat(lobby_data$sensitive, title = "Numero de Reuniones sensitivo")
