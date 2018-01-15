@@ -30,6 +30,7 @@ rm(sheets_data)
 lobby_data$month <- lobby_data$month  %>%
   str_sub(start = 1L, end = -6L) %>%
   factor(ordered = TRUE, levels = c(str_sub(sheets, start = 1L, end = -6L))) 
+write_csv(lobby_data, "./lobby_data.csv")
 ```
 
 ```{r, reading_words_data}
@@ -87,6 +88,7 @@ lobby_data_sensitivo <- lobby_data %>%
 **Padron**
 
 - Numero de personas analizado correctamente: `r nrow(total_padron_df)`
+- Numero de personans con el mismo nobre: `r nrow(total_padron_df) - length(unique(total_padron_df$NOMBRE))`
 
 **Lobby**
 
