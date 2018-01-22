@@ -11,26 +11,8 @@ library("purrr")
 ```
 
 ```{r, reading_lobby_data}
-file <- "../lobby/BB.DD. LOBBY 2_ (1).xlsx"
-sheets <- excel_sheets(file) 
-sheets_data <- lapply(sheets, function(X) {
-  result <- read_excel(file, sheet = X)
-  result$month <- X
-  result
-})
-lobby_data <- do.call("rbind", sheets_data) 
-n_reuniones <- nrow(lobby_data)
-lobby_data <- lobby_data%>%
-  mutate(`Sujetos Activos` = tolower(`Sujetos Activos`),
-         `Sujetos Activos` = str_split(`Sujetos Activos`, ",")) %>%
-  unnest() %>%
-  mutate(`Sujetos Activos` = str_trim(`Sujetos Activos`))
-n_personas <- length(unique(lobby_data$`Sujetos Activos`))  
-rm(sheets_data)
-lobby_data$month <- lobby_data$month  %>%
-  str_sub(start = 1L, end = -6L) %>%
-  factor(ordered = TRUE, levels = c(str_sub(sheets, start = 1L, end = -6L))) 
-write_csv(lobby_data, "./lobby_data.csv")
+lobby_data <- read_csv("./combined_lobby_data.csv")
+n_personas <- length(unique(lobby_data$nombreCompleto))  
 ```
 
 ```{r, reading_words_data}
@@ -38,36 +20,22 @@ file <- "../lobby/keywords - etiquetas - Sheet1.csv"
 words_data <- read_csv(file)
 ```
 
-```{r reading_padron_data, cache=TRUE}
-total_padron_df <- readRDS("total_padron.Rda")
-```
-
-```{r merge_data}
-merged_data <- merge(lobby_data, total_padron_df, 
-                     by.x = "Sujetos Activos", by.y = "NOMBRE")
-```
-
-```{r calculate_distance}
-#total_padron_df <- total_padron_df %>%
-#  mutate(dist = adist(NOMBRE, lobby_data$`Sujetos Activos`[2]))
-```
-
 ```{r, find_words}
 tag_words <- function(word, tema_word) {
   lobby_data %>%
     mutate(
       sensitive = ifelse(
-        grepl(word, `Materia de Audiencia`, ignore.case = TRUE),
+        grepl(word, topic, ignore.case = TRUE),
         TRUE,
         sensitive
       ),
       tag = ifelse(
-        grepl(word, `Materia de Audiencia`, ignore.case = TRUE), 
+        grepl(word, topic, ignore.case = TRUE), 
         word, 
         tag
       ),
       tema = ifelse(
-        grepl(word, `Materia de Audiencia`, ignore.case = TRUE), 
+        grepl(word, topic, ignore.case = TRUE), 
         tema_word, 
         tema
       )
@@ -83,6 +51,21 @@ lobby_data_sensitivo <- lobby_data %>%
   filter(sensitive == TRUE)
 ```
 
+```{r reading_padron_data, cache=TRUE}
+total_padron_df <- readRDS("total_padron.Rda") %>%
+  head(100)
+```
+
+```{r merge_data}
+merged_data <- merge(lobby_data, total_padron_df, 
+                     by.x = "nombreCompleto", by.y = "NOMBRE")
+```
+
+```{r calculate_distance}
+#total_padron_df <- total_padron_df %>%
+#  mutate(dist = adist(NOMBRE, lobby_data$`Sujetos Activos`[2]))
+```
+
 # Informacion general
 
 **Padron**
@@ -92,7 +75,6 @@ lobby_data_sensitivo <- lobby_data %>%
 
 **Lobby**
 
-- Numero de reuniones: `r n_reuniones`
 - Numero de personas en estas reuniones: `r n_personas`
 - Numero de personas en reuniones sensitivo: `r nrow(lobby_data_sensitivo)`
 - Numero de peronas enconro en el padron: `r nrow(merged_data)`
@@ -101,7 +83,5 @@ lobby_data_sensitivo <- lobby_data %>%
 hgch_bar_ver_top_Cat(lobby_data$sensitive, title = "Numero de Reuniones sensitivo")
 hgch_bar_ver_top_Cat(lobby_data$tema, title = "Numero de Reuniones sensitivo por tema")
 hgch_bar_ver_top_Cat(lobby_data$tag, title = "Numero de Reuniones sensitivo por palabra", topn = 10)
-hgch_bar_ver_Cat(lobby_data_sensitivo$month, title = "Numero de Reuniones sensitivo por mes")
-ggplot(lobby_data_sensitivo) +
-  geom_bar(aes(month))
+hgch_bar_ver_Cat(month(lobby_data_sensitivo$fecha), title = "Numero de Reuniones sensitivo por mes")
 ```
