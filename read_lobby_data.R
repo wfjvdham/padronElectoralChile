@@ -111,10 +111,11 @@ names_table <- lobby_data %>%
       nombreCompleto_split, first_apellido, ~ paste(.x[.y:length(.x)], collapse = " ")
     )
   ) %>%
-  select(nombreCompleto, nombre, apellidos)
+  select(nombreCompleto, nombre, apellidos) %>%
+  unnest()
 
 lobby_data <- lobby_data %>%
   select(-nombre, -apellidos, -last_names_in_list, -apellidos_split) %>%
   merge(names_table, by = "nombreCompleto")
 
-#write_csv(lobby_data, "./combined_lobby_data.csv")
+write_csv(lobby_data, "./combined_lobby_data.csv")
