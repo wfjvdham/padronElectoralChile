@@ -5,9 +5,9 @@ output: html_notebook
 
 ```{r, setup, include=FALSE}
 library("tidyverse")
-library("readxl")
 library("hgchmagic")
-library("purrr")
+
+source("./splitting_names.R")
 ```
 
 ```{r, reading_lobby_data}
@@ -53,17 +53,22 @@ lobby_data_sensitivo <- lobby_data %>%
 
 ```{r reading_padron_data, cache=TRUE}
 total_padron_df <- readRDS("total_padron.Rda") %>%
-  head(100)
+  mutate(nombreCompleto = NOMBRE) %>%
+  select(-NOMBRE)
 ```
+
+```{r splitting_names_padron}
+names_table <- total_padron_df %>%
+  split_names()
+
+total_padron_df <- total_padron_df %>%
+  merge(names_table, by = "nombreCompleto")
+```
+
 
 ```{r merge_data}
 merged_data <- merge(lobby_data, total_padron_df, 
-                     by.x = "nombreCompleto", by.y = "NOMBRE")
-```
-
-```{r calculate_distance}
-#total_padron_df <- total_padron_df %>%
-#  mutate(dist = adist(NOMBRE, lobby_data$`Sujetos Activos`[2]))
+                     by = "nombreCompleto")
 ```
 
 # Informacion general
