@@ -58,11 +58,11 @@ total_padron_df <- readRDS("total_padron.Rda") %>%
 ```
 
 ```{r splitting_names_padron}
-names_table <- total_padron_df %>%
-  split_names()
+#names_table <- total_padron_df %>%
+#  split_names()
 
-total_padron_df <- total_padron_df %>%
-  merge(names_table, by = "nombreCompleto")
+#total_padron_df <- total_padron_df %>%
+#  merge(names_table, by = "nombreCompleto")
 ```
 
 

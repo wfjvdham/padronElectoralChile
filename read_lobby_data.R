@@ -95,7 +95,12 @@ names_table <- lobby_data %>%
   split_names()
 
 lobby_data <- lobby_data %>%
-  select(-nombre, -apellidos, -last_names_in_list, -apellidos_split) %>%
-  merge(names_table, by = "nombreCompleto")
+  select(-last_names_in_list, -apellidos_split) %>%
+  merge(names_table, by = "nombreCompleto", all.x = TRUE) %>%
+  mutate(
+    nombre = ifelse(!is.na(nombre.x), nombre.x, nombre.y),
+    apellidos = ifelse(!is.na(apellidos.x), apellidos.x, apellidos.y)
+  ) %>%
+  select(-nombre.x, -nombre.y, -apellidos.x, -apellidos.y)
 
 write_csv(lobby_data, "./combined_lobby_data.csv")
