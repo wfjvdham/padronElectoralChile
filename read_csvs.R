@@ -54,7 +54,7 @@ total_list <- 1:length(filesFinished) %>%
   })
 
 total_padron_df <- do.call("rbind", total_list) %>%
-  filter(is.na(NOMBRE)) %>%
+  filter(!is.na(NOMBRE)) %>%
   mutate(NOMBRE = tolower(NOMBRE)) %>%
   mutate(NOMBRE = str_trim(NOMBRE))
 saveRDS(total_padron_df, file = "total_padron.Rda")
