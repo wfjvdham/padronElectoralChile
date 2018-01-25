@@ -14,36 +14,54 @@ sheets_data <- map(sheets, function(X) {
 
 lobby_data_xl <- do.call("rbind", sheets_data) %>%
   select(
-    nombreCompleto = `Sujetos Activos`,
+    nombreCompletoActivo = `Sujetos Activos`,
     nombreInstitucion = `Organismo Público`,
     topic = `Materia de Audiencia`,
-    fecha = Fecha
+    fecha = Fecha,
+    nombreCompletoPasivo = Autoridad,
+    `Cargo autoridad`, `Categoria Cargo`, `Categorización FM`, 
+    `Categorización portal`, `Materia Ley`
   ) %>%
-  mutate(nombreCompleto = str_split(nombreCompleto, ","),
-         nombre = NA,
-         apellidos = NA,
-         codigoInstitucion = NA) %>%
+  mutate(nombreCompletoActivo = str_split(nombreCompletoActivo, ","),
+         nombreActivo = NA,
+         apellidosActivo = NA,
+         nombrePasivo = NA,
+         apellidosPasivo = NA,
+         codigoInstitucion = NA,
+         codigoActualDatasetRegistro = paste0("xl-", rep(1:nrow(.)))) %>%
   unnest()
 
-file <- "../lobby/pasivos.csv"
-pasivos <- read_delim(file, delim = ";")
-# Table with names that can be connected to the meetings
+pasivos <- read_delim("../lobby/pasivos.csv", delim = ";")
+activos <- read_csv("../lobby/activos_parsed.csv") %>%
+  select(codigoActualDatasetRegistro, nombreActivo, apellidosActivo)
+datos_audiencias <- read_csv("../lobby/datosAudiencia.csv")
 
-#most ids in pasivo are in active
-#sum(unique(activos_parsed$codigoActualDatasetRegistro) %in% 
-#      unique(pasivos$codigoActualDatasetRegistro))
-
-file <- "../lobby/datosAudiencia.csv"
-datos_audiencias <- read_csv(file)
-
-names_institution_topics <- merge(pasivos, datos_audiencias, by = "codigoActualDatasetRegistro") %>%
+names_institution_topics <- merge(pasivos, datos_audiencias, by = "codigoActualDatasetRegistro", all = TRUE) %>%
   select(
-    nombre = nombrePasivo, apellidos = apellidosPasivo,
+    nombrePasivo, apellidosPasivo,
     nombreInstitucion, codigoInstitucion,
     topic = observacionesMateriaAudiencia,
-    fecha = fechaInicio
+    fecha = fechaInicio,
+    codigoActualDatasetRegistro
   ) %>%
-  mutate(nombreCompleto = paste(nombre, apellidos))
+  merge(activos, by = "codigoActualDatasetRegistro", all = TRUE) %>%
+  mutate(
+    nombreCompletoPasivo = ifelse(
+      is.na(nombrePasivo) | is.na(apellidosPasivo),
+      NA,
+      paste(nombrePasivo, apellidosPasivo)
+    ),
+    nombreCompletoActivo = ifelse(
+      is.na(nombreActivo) | is.na(apellidosActivo),
+      NA,
+      paste(nombreActivo, apellidosActivo)
+    ),
+    `Cargo autoridad` = NA, 
+    `Categoria Cargo` = NA, 
+    `Categorización FM` = NA, 
+    `Categorización portal` = NA, 
+    `Materia Ley` = NA
+  )
 
 parse_names <- function(names) {
   names %>%
@@ -53,36 +71,25 @@ parse_names <- function(names) {
 
 lobby_data <- rbind(names_institution_topics, lobby_data_xl) %>%
   mutate(
-    nombreCompleto = parse_names(nombreCompleto),
-    nombre = parse_names(nombre),
-    apellidos = parse_names(apellidos)
+    nombreCompletoActivo = parse_names(nombreCompletoActivo),
+    nombreCompletoPasivo = parse_names(nombreCompletoPasivo),
+    nombreActivo = parse_names(nombreActivo),
+    nombrePasivo = parse_names(nombrePasivo),
+    apellidosActivo = parse_names(apellidosActivo),
+    apellidosPasivo = parse_names(apellidosPasivo)
   )
-
-last_names <- read_csv("../names/last_name.csv")
-lobby_data <- lobby_data %>%
-  mutate(apellidos_split = str_split(apellidos, " ")) %>%
-  unnest() %>%
-  mutate(
-    last_names_in_list = apellidos_split %in% last_names$last_name
-  )
-
-# consistency check
-sum(unique(last_names$last_name) %in% unique(lobby_data$apellidos_split))
-length(unique(last_names$last_name))
-length(unique(lobby_data$apellidos_split))
 
 names_table <- lobby_data %>%
-  filter(is.na(apellidos)) %>%
-  select(nombreCompleto) %>%
+  filter(is.na(apellidosActivo)) %>%
+  select(nombreCompleto = nombreCompletoActivo) %>%
   split_names()
 
 lobby_data <- lobby_data %>%
-  select(-last_names_in_list, -apellidos_split) %>%
-  merge(names_table, by = "nombreCompleto", all.x = TRUE) %>%
+  merge(names_table, by.x = "nombreCompletoActivo", by.y = "nombreCompleto", all.x = TRUE) %>%
   mutate(
-    nombre = ifelse(!is.na(nombre.x), nombre.x, nombre.y),
-    apellidos = ifelse(!is.na(apellidos.x), apellidos.x, apellidos.y)
+    nombreActivo = ifelse(!is.na(nombreActivo), nombreActivo, nombre),
+    apellidosActivo = ifelse(!is.na(apellidosActivo), apellidosActivo, apellidos)
   ) %>%
-  select(-nombre.x, -nombre.y, -apellidos.x, -apellidos.y)
+  select(-nombre, -apellidos)
 
-write_csv(lobby_data, "./combined_lobby_data.csv")
+saveRDS(lobby_data, "./combined_lobby_data.Rda")
