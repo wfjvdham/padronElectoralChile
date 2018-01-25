@@ -25,24 +25,6 @@ lobby_data_xl <- do.call("rbind", sheets_data) %>%
          codigoInstitucion = NA) %>%
   unnest()
 
-# file <- "../lobby/audiencias.csv"
-# audiencias <- read_csv(file) %>%
-#  select(nombreInstitucion, nombreComuna, observacionesMateriaAudiencia, descripcionMateria)
-# The columns observacionesMateriaAudiencia and descripcionMateria
-# both can contain descriptions about the meeting
-# The file datosAudiencia.csv is beter formatted and has the same information
-
-# file <- "../lobby/asistenciasActivos.csv"
-# asistencias_activos <- read_delim(file, delim = ";")
-# Table for combining data which is not used at the moment
-
-# file <- "../lobby/entidades.csv"
-# entidades <- read_csv(file)
-# File to get the details about the entities
-
-#activos_parsed <- read_csv("../lobby/activos_parsed.csv")
-#file without description of the meeting
-
 file <- "../lobby/pasivos.csv"
 pasivos <- read_delim(file, delim = ";")
 # Table with names that can be connected to the meetings
