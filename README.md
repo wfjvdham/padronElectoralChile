@@ -22,7 +22,9 @@ Not all the data files about the lobby contain usefull information. Here is desc
 
 ### Used
 
-`pasivos.csv` - Contains the names that can be connected with the meetings.
+`pasivos.csv` - Contains the names of the persons representing the autority in the meeting.
+
+`activos.csv` - This file has some difficulties when reading. After opening in excel and saving as a csv with a different formatting it works fine. It contains the names of the persons not representing the autorities in the meeting.
 
 `datosAudiencia.csv` - Contains the description of what was discussed in the meeting. This information is used to check if a meeting is sensitive or not.
 
@@ -33,7 +35,3 @@ Not all the data files about the lobby contain usefull information. Here is desc
 `asistenciasActivos.csv` - Contains ids for combining data from different sources but is not needed. 
 
 `entidades.csv` - File that contains more details about the entities. But for now only the name of the entity is enough.
-
-`activos.csv` - This file has some difficulties when reading. After opening in ecel and saving as a csv with a different formatting it works fine. It contains the names of the persons in a meeting but not the description of the meeting.
-
-
