@@ -89,6 +89,20 @@ merged_data <- merge(lobby_data, total_padron_df,
 - Numero de peronas enconro en el padron: `r nrow(merged_data)`
 
 ```{r counts}
+plot_for_variable <- function(data, variable) {
+  top10 <- lobby_data %>%
+    filter(!is.na(!! rlang::sym(variable))) %>%
+    count(!! rlang::sym(variable)) %>%
+    arrange(desc(n)) %>%
+    slice(1:10)
+  lobby_data %>%
+    filter((!! rlang::sym(variable)) %in% top10[[variable]]) %>%
+    ggplot() +
+    geom_bar(aes_string(variable, fill = "sensitive")) +
+    labs(title = paste("Numero de Reuniones por", variable)) + 
+    theme(axis.text.x = element_text(angle = 90, size = 5))
+}
+
 hgch_bar_ver_top_Cat(lobby_data$sensitive, title = "Numero de Reuniones sensitivo")
 hgch_bar_ver_top_Cat(lobby_data$tema, title = "Numero de Reuniones sensitivo por tema")
 hgch_bar_ver_top_Cat(lobby_data$tag, title = "Numero de Reuniones sensitivo por palabra", topn = 10)
@@ -101,30 +115,10 @@ lobby_data %>%
   labs(title = "Numero de Reuniones por mes")
 
 hgch_bar_ver_top_Cat(lobby_data_sensitivo$nombreInstitucion, title = "Numero de Reuniones sensitivo por Institucion", topn = 10)
-top10_institutes <- lobby_data %>%
-  filter(!is.na(nombreInstitucion)) %>%
-  count(nombreInstitucion) %>%
-  arrange(desc(n)) %>%
-  slice(1:10)
-lobby_data %>%
-  filter(nombreInstitucion %in% top10_institutes$nombreInstitucion) %>%
-  ggplot() +
-  geom_bar(aes(factor(nombreInstitucion), fill = sensitive)) +
-  labs(title = "Numero de Reuniones por Institucion") + 
-  theme(axis.text.x = element_text(angle = 90, size = 5))
+plot_for_variable(lobby_data, "nombreInstitucion")
 
 hgch_bar_ver_top_Cat(lobby_data_sensitivo$nombreCompletoPasivo, title = "Numero de Reuniones sensitivo por Persona", topn = 10)
-top10_nombre <- lobby_data %>%
-  filter(!is.na(nombreCompletoPasivo)) %>%
-  count(nombreCompletoPasivo) %>%
-  arrange(desc(n)) %>%
-  slice(1:10)
-lobby_data %>%
-  filter(nombreCompletoPasivo %in% top10_nombre$nombreCompletoPasivo) %>%
-  ggplot() +
-  geom_bar(aes(factor(nombreCompletoPasivo), fill = sensitive)) +
-  labs(title = "Numero de Reuniones por Persona") + 
-  theme(axis.text.x = element_text(angle = 90, size = 5))
+plot_for_variable(lobby_data, "nombreCompletoPasivo")
 
 hgch_bar_ver_top_Cat(lobby_data_sensitivo$`Cargo autoridad`, title = "Numero de Reuniones sensitivo por Cargo autoridad", topn = 10)
 top10_autoridad <- lobby_data %>%
