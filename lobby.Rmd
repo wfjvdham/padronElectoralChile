@@ -11,8 +11,11 @@ source("./splitting_names.R")
 ```
 
 ```{r, reading_lobby_data}
-lobby_data <- read_csv("./combined_lobby_data.csv")
-n_personas <- length(unique(lobby_data$nombreCompleto))  
+lobby_data <- readRDS("./combined_lobby_data.Rda")
+n_personas <- length(unique(lobby_data$nombreCompletoActivo))  
+n_reuniones <- lobby_data %>%
+  count(codigoActualDatasetRegistro) %>%
+  nrow()
 ```
 
 ```{r, reading_words_data}
@@ -68,7 +71,7 @@ total_padron_df <- readRDS("total_padron.Rda") %>%
 
 ```{r merge_data}
 merged_data <- merge(lobby_data, total_padron_df, 
-                     by = "nombreCompleto")
+                     by.x = "nombreCompletoActivo", by.y = "nombreCompleto")
 ```
 
 # Informacion general
@@ -76,10 +79,11 @@ merged_data <- merge(lobby_data, total_padron_df,
 **Padron**
 
 - Numero de personas analizado correctamente: `r nrow(total_padron_df)`
-- Numero de personans con el mismo nobre: `r nrow(total_padron_df) - length(unique(total_padron_df$NOMBRE))`
+- Numero de personans con el mismo nobre: `r nrow(total_padron_df) - length(unique(total_padron_df$nombreCompleto))`
 
 **Lobby**
 
+- Numero de reuniones: `r n_reuniones`
 - Numero de personas en estas reuniones: `r n_personas`
 - Numero de personas en reuniones sensitivo: `r nrow(lobby_data_sensitivo)`
 - Numero de peronas enconro en el padron: `r nrow(merged_data)`
@@ -88,5 +92,98 @@ merged_data <- merge(lobby_data, total_padron_df,
 hgch_bar_ver_top_Cat(lobby_data$sensitive, title = "Numero de Reuniones sensitivo")
 hgch_bar_ver_top_Cat(lobby_data$tema, title = "Numero de Reuniones sensitivo por tema")
 hgch_bar_ver_top_Cat(lobby_data$tag, title = "Numero de Reuniones sensitivo por palabra", topn = 10)
+
 hgch_bar_ver_Cat(month(lobby_data_sensitivo$fecha), title = "Numero de Reuniones sensitivo por mes")
+lobby_data %>%
+  filter(!is.na(fecha)) %>%
+  ggplot() +
+  geom_bar(aes(factor(month(fecha)), fill = sensitive)) +
+  labs(title = "Numero de Reuniones por mes")
+
+hgch_bar_ver_top_Cat(lobby_data_sensitivo$nombreInstitucion, title = "Numero de Reuniones sensitivo por Institucion", topn = 10)
+top10_institutes <- lobby_data %>%
+  filter(!is.na(nombreInstitucion)) %>%
+  count(nombreInstitucion) %>%
+  arrange(desc(n)) %>%
+  slice(1:10)
+lobby_data %>%
+  filter(nombreInstitucion %in% top10_institutes$nombreInstitucion) %>%
+  ggplot() +
+  geom_bar(aes(factor(nombreInstitucion), fill = sensitive)) +
+  labs(title = "Numero de Reuniones por Institucion") + 
+  theme(axis.text.x = element_text(angle = 90, size = 5))
+
+hgch_bar_ver_top_Cat(lobby_data_sensitivo$nombreCompletoPasivo, title = "Numero de Reuniones sensitivo por Persona", topn = 10)
+top10_nombre <- lobby_data %>%
+  filter(!is.na(nombreCompletoPasivo)) %>%
+  count(nombreCompletoPasivo) %>%
+  arrange(desc(n)) %>%
+  slice(1:10)
+lobby_data %>%
+  filter(nombreCompletoPasivo %in% top10_nombre$nombreCompletoPasivo) %>%
+  ggplot() +
+  geom_bar(aes(factor(nombreCompletoPasivo), fill = sensitive)) +
+  labs(title = "Numero de Reuniones por Persona") + 
+  theme(axis.text.x = element_text(angle = 90, size = 5))
+
+hgch_bar_ver_top_Cat(lobby_data_sensitivo$`Cargo autoridad`, title = "Numero de Reuniones sensitivo por Cargo autoridad", topn = 10)
+top10_autoridad <- lobby_data %>%
+  filter(!is.na(`Cargo autoridad`)) %>%
+  count(`Cargo autoridad`) %>%
+  arrange(desc(n)) %>%
+  slice(1:10)
+lobby_data %>%
+  filter(`Cargo autoridad` %in% top10_autoridad$`Cargo autoridad`) %>%
+  ggplot() +
+  geom_bar(aes(factor(`Cargo autoridad`), fill = sensitive)) +
+  labs(title = "Numero de Reuniones por Cargo autoridad") + 
+  theme(axis.text.x = element_text(angle = 90, size = 5))
+
+hgch_bar_ver_top_Cat(lobby_data_sensitivo$`Categoria Cargo`, title = "Numero de Reuniones sensitivo por Categoria Cargo", topn = 10)
+top5_categoria_cargo <- lobby_data %>%
+  filter(!is.na(`Categoria Cargo`)) %>%
+  count(`Categoria Cargo`) %>%
+  arrange(desc(n)) %>%
+  slice(1:5)
+lobby_data %>%
+  filter(`Categoria Cargo` %in% top5_categoria_cargo$`Categoria Cargo`) %>%
+  ggplot() +
+  geom_bar(aes(factor(`Categoria Cargo`), fill = sensitive)) +
+  labs(title = "Numero de Reuniones por Categoria Cargo")
+
+hgch_bar_ver_top_Cat(lobby_data_sensitivo$`Categorización FM`, title = "Numero de Reuniones sensitivo por Categorización FM", topn = 10)
+top10_fm <- lobby_data %>%
+  filter(!is.na(`Categorización FM`)) %>%
+  count(`Categorización FM`) %>%
+  arrange(desc(n)) %>%
+  slice(1:10)
+lobby_data %>%
+  filter(`Categorización FM` %in% top10_fm$`Categorización FM`) %>%
+  ggplot() +
+  geom_bar(aes(factor(`Categorización FM`), fill = sensitive)) +
+  labs(title = "Numero de Reuniones por Categorización FM")
+
+hgch_bar_ver_top_Cat(lobby_data_sensitivo$`Categorización portal`, title = "Numero de Reuniones sensitivo por Categorización portal", topn = 10)
+top10_portal <- lobby_data %>%
+  filter(!is.na(`Categorización portal`)) %>%
+  count(`Categorización portal`) %>%
+  arrange(desc(n)) %>%
+  slice(1:10)
+lobby_data %>%
+  filter(`Categorización portal` %in% top10_portal$`Categorización portal`) %>%
+  ggplot() +
+  geom_bar(aes(factor(`Categorización portal`), fill = sensitive)) +
+  labs(title = "Numero de Reuniones por Categorización FM")
+
+hgch_bar_ver_top_Cat(lobby_data_sensitivo$`Materia Ley`, title = "Numero de Reuniones sensitivo por Materia Ley", topn = 10)
+top10_ley <- lobby_data %>%
+  filter(!is.na(`Materia Ley`)) %>%
+  count(`Materia Ley`) %>%
+  arrange(desc(n)) %>%
+  slice(1:10)
+lobby_data %>%
+  filter(`Materia Ley` %in% top10_ley$`Materia Ley`) %>%
+  ggplot() +
+  geom_bar(aes(factor(`Materia Ley`), fill = sensitive)) +
+  labs(title = "Numero de Reuniones por Categorización FM")
 ```
